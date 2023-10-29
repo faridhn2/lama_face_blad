@@ -32,7 +32,11 @@ from lama_cleaner.plugins import (
     AnimeSeg,
 )
 from lama_cleaner.schema import Config
+import os.path
+import sys
 
+sys.path.insert(1, '/content/lama_face_blad')
+import simple_extractor
 try:
     torch._C._jit_override_can_fuse_on_cpu(False)
     torch._C._jit_override_can_fuse_on_gpu(False)
@@ -111,32 +115,19 @@ import numpy as np
 #     output_image = cv2.dilate(output_image, kernel, iterations=2) 
 #     return output_image
 
-# def create_mask_face(frame):
+def create_mask_face(frame):
   
-#     face_locations = []
-#     rgb_small_frame = frame[:, :, ::-1]
-
-#     face_locations = face_recognition.face_locations(rgb_small_frame)
-
-#     mask = np.zeros((frame.shape[0],frame.shape[1]),dtype=np.uint8)
-#     for (top, right, bottom, left) in face_locations:
-#         top =max(0,top-int(frame.shape[0]/10))
-#         bottom =min(frame.shape[1],bottom+int(frame.shape[1]/10))
-#         left =max(0,left-int(frame.shape[1]/10))
-#         right =min(frame.shape[0],right+int(frame.shape[0]/10))
-
-#         mask[top:bottom,left:right]=255
-    
-#     hair_mask = hair_detect(frame)
-#     hair_mask = cv2.cvtColor(hair_mask,cv2.COLOR_BGR2GRAY)
-#     print('--------')
-#     print(hair_mask.shape)
-#     print(mask.shape)
-#     mask=cv2.add(hair_mask,mask)
-#     return mask
+    mask = simple_extractor.main(frame)
+    return mask
 import cv2
 
+def get_output_layers(net):
 
+    layer_names = net.getLayerNames()
+
+    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
+
+    return output_layers
 def create_mask_person(image):
 
     
@@ -369,7 +360,7 @@ def process():
 
     # mask, _ = load_img(input["mask"].read(), gray=True)
     
-    mask = create_mask_person(image)
+    mask = create_mask_face(image)
     mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)[1]
     if image.shape[:2] != mask.shape[:2]:
         return (
