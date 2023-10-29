@@ -118,7 +118,16 @@ import numpy as np
 def create_mask_face(frame):
   
     mask = simple_extractor.main(frame)
-    return mask
+   
+    kernel = np.ones((5, 5), np.uint8) 
+      
+    
+    
+    img_dilation = cv2.dilate(mask, kernel, iterations=1) 
+      
+    
+  
+    return img_dilation
 import cv2
 
 def get_output_layers(net):
